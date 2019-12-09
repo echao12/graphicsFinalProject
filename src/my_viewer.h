@@ -12,6 +12,13 @@ class MyViewer : public WsViewer
 	enum MenuEv { EvNormals, EvAnimate, EvExit };
 	UiCheckButton* _nbut;
 	bool _animating;
+	bool fixedCamera;
+	float camX, camY, camZ;
+	double angle[6];
+	int strideNum;
+	bool movingForward;
+	void buildCharacter();
+	void buildEnvironment();
    public :
 	MyViewer ( int x, int y, int w, int h, const char* l );
 	void build_ui ();
