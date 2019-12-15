@@ -162,6 +162,28 @@ void MyViewer::buildEnvironment() {
 	eGroup->add(globalTrans);
 	eGroup->add(floorGroup);
 
+	SnGroup* houseG;
+	SnModel* houseM;
+	SnTransform* houseT;
+	GsMat houseMat;
+	GsBox houseB;
+
+	houseM = new SnModel;
+	houseM->model()->load("../village_house/medieval house.3ds");
+	//houseM->model()->G.push()->dmap->fname.set("../village_house/house2.png");
+	houseM->model()->get_bounding_box(houseB);
+	houseMat.translation(GsVec(0.0f, houseB.dy() / 2, -3.0f));
+	houseT = new SnTransform;
+	houseT->set(houseMat);
+
+	houseG = new SnGroup;
+	houseG->separator(true);
+	houseG->add(houseT);
+	houseG->add(houseM);
+
+	eGroup->add(houseG);
+
+
 	rootg()->add(eGroup);
 
 }
