@@ -19,6 +19,9 @@ class MyViewer : public WsViewer
 	bool movingForward;
 	void buildCharacter();
 	void buildEnvironment();
+	void generatePaths();
+	void buildCars();
+	GsPnt eval_Bezier(float, const GsArray<GsPnt>& P);
    public :
 	MyViewer ( int x, int y, int w, int h, const char* l );
 	void build_ui ();

@@ -126,7 +126,7 @@ void MyViewer::buildCharacter() {
 	gCharacter = new SnGroup;
 	gBody = new SnGroup;
 
-	gBody->separator(false);
+	gBody->separator(true);
 	for (int i = 0; i < 6; i++) {
 		gBody->add(group[i]);//attach each part into a character group
 	}
@@ -169,10 +169,10 @@ void MyViewer::buildEnvironment() {
 	GsBox houseB;
 
 	houseM = new SnModel;
-	houseM->model()->load("../village_house/medieval house.3ds");
+	//houseM->model()->load("../village_house/medieval house.3ds");
 	//houseM->model()->G.push()->dmap->fname.set("../village_house/house2.png");
-	houseM->model()->get_bounding_box(houseB);
-	houseMat.translation(GsVec(0.0f, houseB.dy() / 2, -3.0f));
+	//houseM->model()->get_bounding_box(houseB);
+	//houseMat.translation(GsVec(0.0f, houseB.dy() / 2, -3.0f));
 	houseT = new SnTransform;
 	houseT->set(houseMat);
 
@@ -187,13 +187,151 @@ void MyViewer::buildEnvironment() {
 	rootg()->add(eGroup);
 
 }
+int factorial(int i) {
+	if (i < 2)
+		return 1;
+	else
+		return i * factorial(i - 1);
+}
+GsPnt MyViewer::eval_Bezier(float t, const GsArray<GsPnt>& P) {
+	//evaluating the point on the curve given the control points
+	GsPnt point;//the point we are evauating
+	int n = P.size() - 1;
+	for (int i = 0; i < n + 1; i++) {
+		point += (P[i] * ((factorial(n) / (factorial(i) * factorial(n - i)))
+			* powf(t, (float)i) * powf(1.0f - t, (float)(n - i))));
+	}
+	return point;
+}
+void MyViewer::generatePaths() {
+	SnLines* path = new SnLines;//create path
+	path->init();
+	path->color(GsColor::yellow);
+	path->line_width(3.5f);
+	GsArray<GsPnt> controlPnts;//generate control points for curve
+	//GsArray<GsPnt>* curvePnts;//will need to keep curvePnts
+	SnGroup* pathG = new SnGroup;//will be a subgroup of environment
+	pathG->separator(true);
+
+	float height = 1.0f;
+	controlPnts.push() = GsPnt(-2, height, 0);
+	controlPnts.push() = GsPnt(0, height, -5);
+	controlPnts.push() = GsPnt(-2, height, -5);
+	float delta = 0.125f;
+
+	path->begin_polyline();
+	for (float t = 0; t < 1.0f; t += delta) {
+		GsPnt pnt = eval_Bezier(t, controlPnts);
+		path->push(pnt);//to display the curve
+		//curvePnts->push(pnt);// to easily access the values of the curve points
+	}
+	path->end_polyline();
+	pathG->add(path);
+	rootg()->add(pathG);
+}
+void MyViewer::buildCars() {
+	SnGroup *carPart[6], *gCar, *gBody;// = new SnGroup;
+	SnPrimitive *part[6];// , * sModel[6]; // head, body, arms, legs and shadow counter-parts
+	SnTransform *trans[6], *tCar; // holds transform for each part
+	GsMat m[6]; // allows alteration of each transform
+	GsMat rotation;
+	rotation.rotz(gspidiv2);
+	GsBox b[6]; // holds bounding box for each part.
+
+	for (int i = 0; i < 6; i++) {
+		carPart[i] = new SnGroup;
+		carPart[i]->separator(true);
+		trans[i] = new SnTransform;
+	}
+	gCar = new SnGroup;
+	gCar->separator(true);
+	tCar = new SnTransform;
+	gBody = new SnGroup;
+	gBody->separator(true);
+
+	//car parts: 0top 1body 2FrontLeft 3FrontRight 4BackLeft 5BackRight
+	//main body
+	part[0] = new SnPrimitive(GsPrimitive::Box, 0.5f, 0.2f, 0.75f);
+	part[0]->model()->get_bounding_box(b[0]);
+	part[0]->prim().material.diffuse = GsColor::red;
+	carPart[0]->add(trans[0]);
+	carPart[0]->add(part[0]);
+	//top body
+	part[1] = new SnPrimitive(GsPrimitive::Box, 0.5f, 0.15f, 0.25f);
+	part[1]->prim().material.diffuse = GsColor::red;
+	part[1]->model()->get_bounding_box(b[1]);
+	carPart[1]->add(trans[1]);
+	m[1].setrans(GsVec(0.0f,(b[0].dy()/2) + b[1].dy()/2,0.0f));
+	trans[1]->set(m[1]);
+	carPart[1]->add(part[1]);
+
+	//Front Left wheel
+	part[2] = new SnPrimitive(GsPrimitive::Cylinder, 0.25f, 0.25f, 0.05f);
+	part[2]->prim().material.diffuse = GsColor::black;
+	part[2]->get_bounding_box(b[2]);
+	carPart[2]->add(trans[2]);
+	m[2].mult(rotation, m[2]);
+	m[2].setrans(GsVec((b[0].dx() / 2) + (b[2].dx()/8), b[0].dy() / -3, (b[0].dz() / 2)-(b[2].dz()/2)));
+
+	trans[2]->set(m[2]);
+	carPart[2]->add(part[2]);
+
+	//Front Right Wheel
+	part[3] = new SnPrimitive(GsPrimitive::Cylinder, 0.25f, 0.25f, 0.05f);
+	part[3]->prim().material.diffuse = GsColor::black;
+	part[3]->get_bounding_box(b[3]);
+	carPart[3]->add(trans[3]);
+	m[3].mult(rotation, m[3]);
+	m[3].setrans(GsVec((b[0].dx() / -2) + (b[3].dx() / -8), b[0].dy() / -3, (b[0].dz() / 2) - (b[3].dz() / 2)));
+
+	trans[3]->set(m[3]);
+	carPart[3]->add(part[3]);
+
+	//Back Left wheel
+	part[4] = new SnPrimitive(GsPrimitive::Cylinder, 0.25f, 0.25f, 0.05f);
+	part[4]->prim().material.diffuse = GsColor::black;
+	part[4]->get_bounding_box(b[4]);
+	carPart[4]->add(trans[4]);
+	m[4].mult(rotation, m[4]);
+	m[4].setrans(GsVec((b[0].dx() / 2) + (b[4].dx() / 8), b[0].dy() / -3, (b[0].dz() / -2) - (b[4].dz() / -2)));
+
+	trans[4]->set(m[4]);
+	carPart[4]->add(part[4]);
+
+	//Back Right wheel
+	part[5] = new SnPrimitive(GsPrimitive::Cylinder, 0.25f, 0.25f, 0.05f);
+	part[5]->prim().material.diffuse = GsColor::black;
+	part[5]->get_bounding_box(b[5]);
+	carPart[5]->add(trans[5]);
+	m[5].mult(rotation, m[5]);
+	m[5].setrans(GsVec((b[0].dx() / -2) + (b[5].dx() / -8), b[0].dy() / -3, (b[0].dz() / -2) - (b[5].dz() / -2)));
+
+	trans[5]->set(m[5]);
+	carPart[5]->add(part[5]);
+
+	//add global transform to control the body of the car
+	gBody->add(tCar);//order: root->gCar->gBody(tCar, carPart[i](carTrans,part Model))
+	GsMat raiseCar;
+	raiseCar.translation(GsVec(0, (b[0].dy()),0));
+	tCar->set(raiseCar);
+	//add carParts to the body
+	for (int i = 0; i < 6; i++) {
+		gBody->add(carPart[i]);
+	}
+	//might want to place tCar outside of the gBody node.
+	gCar->add(gBody);
+	rootg()->add(gCar);
+
+}
 void MyViewer::build_scene ()
 {
 	// this project will have 3 main groups from root
-	//0->environment 1->characters 2-> shadows
+	//0->environment 1->characters
 	//environment sub groups: 
-	buildEnvironment();
-	buildCharacter();//steve is index 1 from root
+	buildEnvironment();//attatch egroup(separator true) to root. egroup consists of global transform, floor group(sep. true), house group(sep true).
+	buildCharacter();//steve is index 1 from root. adds character group to root(sep. true). this group consists of global transform and body group(sep true)
+	generatePaths();
+	buildCars();
 	//buildRobot();
 
 }
@@ -204,10 +342,6 @@ void MyViewer::run_animation ()
 	if ( _animating ) return; // avoid recursive calls
 	_animating = true;
 	
-	int ind = gs_random ( 0, rootg()->size()-1 ); // pick one child
-	SnManipulator* manip = rootg()->get<SnManipulator>(ind); // access one of the manipulators
-	GsMat m = manip->mat();
-
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
 	double v = 4; // target velocity is 1 unit per second
 	double t=0, lt=0, t0=gs_time();
@@ -216,12 +350,10 @@ void MyViewer::run_animation ()
 		double yinc = (t-lt)*v;
 		if ( t>2 ) yinc=-yinc; // after 2 secs: go down
 		lt = t;
-		m.e24 += (float)yinc;
-		if ( m.e24<0 ) m.e24=0; // make sure it does not go below 0
-		manip->initial_mat ( m );
+		if ( <0 ) ; // make sure it does not go below 0
 		render(); // notify it needs redraw
 		ws_check(); // redraw now
-	}	while ( m.e24>0 );
+	}	while ( >0 );
 	_animating = false;
 }
 
