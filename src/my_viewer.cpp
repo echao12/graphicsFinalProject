@@ -159,8 +159,8 @@ void MyViewer::buildEnvironment() {
 
 	eGroup = new SnGroup;
 	eGroup->separator(true);
-	eGroup->add(globalTrans);
-	eGroup->add(floorGroup);
+	eGroup->add(globalTrans);//egroup->0
+	eGroup->add(floorGroup);//egroup->1
 
 	SnGroup* houseG;
 	SnModel* houseM;
@@ -169,10 +169,9 @@ void MyViewer::buildEnvironment() {
 	GsBox houseB;
 
 	houseM = new SnModel;
-	//houseM->model()->load("../village_house/medieval house.3ds");
-	//houseM->model()->G.push()->dmap->fname.set("../village_house/house2.png");
-	//houseM->model()->get_bounding_box(houseB);
-	//houseMat.translation(GsVec(0.0f, houseB.dy() / 2, -3.0f));
+	houseM->model()->load("../Car-Model/Car.obj");
+	houseM->model()->get_bounding_box(houseB);
+	houseMat.translation(GsVec(0.0f,0.0f, -3.0f));
 	houseT = new SnTransform;
 	houseT->set(houseMat);
 
@@ -181,7 +180,7 @@ void MyViewer::buildEnvironment() {
 	houseG->add(houseT);
 	houseG->add(houseM);
 
-	eGroup->add(houseG);
+	eGroup->add(houseG);//eGroup->2
 
 
 	rootg()->add(eGroup);
@@ -213,10 +212,10 @@ void MyViewer::generatePaths() {
 	SnGroup* pathG = new SnGroup;//will be a subgroup of environment
 	pathG->separator(true);
 
-	float height = 1.0f;
+	float height = 0.5f;
 	controlPnts.push() = GsPnt(-2, height, 0);
 	controlPnts.push() = GsPnt(0, height, -5);
-	controlPnts.push() = GsPnt(-2, height, -5);
+	controlPnts.push() = GsPnt(-2, height, -20);
 	float delta = 0.125f;
 
 	path->begin_polyline();
@@ -323,6 +322,153 @@ void MyViewer::buildCars() {
 	rootg()->add(gCar);
 
 }
+void MyViewer::buildRobot() {
+
+	SnGroup *mg = new SnGroup;
+	SnTransform *mt = new SnTransform;
+	GsMat m[11];
+	SnTransform* t[6];
+	SnGroup* g[6];
+	SnModel* model[11];
+
+	//.................................The following are the parts.
+
+	t[0] = new SnTransform;
+	t[0]->set(m[0]);
+	g[0] = new SnGroup;
+	//g[0]->add(t[0]);//adding translation of the first matrix to the root.
+
+
+	//body 
+	model[0] = new SnModel;
+	model[0]->model()->make_cylinder(GsPnt(0.0f, 3.0f, 0.0f), GsPnt(0.0f, -3.0f, 0.0f), 2.0f, 2.0f, 20, true);
+	model[0]->color(GsColor::gray);
+	g[0]->add(t[0]);
+	g[0]->add(model[0]);
+	g[0]->separator(true);
+
+
+
+	//....................The neck of character
+
+	t[1] = new SnTransform;
+	t[1]->set(m[1]);
+
+	model[1] = new SnModel;
+	g[1] = new SnGroup;
+	model[1]->model()->make_cylinder(GsPnt(0.0f, 4.5f, 0.0f), GsPnt(0.0f, 3.0f, 0.0f), 0.2f, 0.2f, 20, true);
+	model[1]->color(GsColor::gray);
+	g[1]->add(t[1]);
+	g[1]->add(model[1]);
+
+	//..................................The head of character
+	model[2] = new SnModel;
+	model[2]->model()->make_cylinder(GsPnt(0.0f, 5.7f, 0.0f), GsPnt(0.0f, 4.5f, 0.0f), 0.9f, 0.9f, 20, true);
+	model[2]->color(GsColor::gray);
+	g[1]->add(model[2]);
+	g[1]->separator(true);
+
+
+
+	//	.//.........///........//...............right arm
+	t[2] = new SnTransform;
+	g[2] = new SnGroup;
+	m[2].translation(-2.0f, 0.0f, 0.0f);
+	t[2]->set(m[2]);
+
+	model[3] = new SnModel;
+	model[3]->model()->make_cylinder(GsPnt(-5.0f, 1.0f, 0.0f), GsPnt(0.0f, 1.0f, 0.0f), 0.75f, 0.75f, 20, true);
+	model[3]->color(GsColor::gray);
+	g[2]->add(t[2]);
+	g[2]->add(model[3]);
+
+
+	//.....................................R
+	model[4] = new SnModel;
+	model[4]->model()->make_cylinder(GsPnt(-7.0f, 1.0f, 0.0f), GsPnt(-5.0f, 1.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[4]->color(GsColor::gray);
+	g[2]->add(model[4]);
+	g[2]->separator(true);
+
+
+
+	//....///.........///.........//............left arm
+	t[3] = new SnTransform;
+	g[3] = new SnGroup;
+	m[3].translation(2.0f, 0.0f, 0.0f);
+	t[3]->set(m[3]);
+
+	model[5] = new SnModel;
+	model[5]->model()->make_cylinder(GsPnt(0.0f, 1.0f, 0.0f), GsPnt(5.0f, 1.0f, 0.0f), 0.75f, 0.75f, 20, true);
+	model[5]->color(GsColor::gray);
+	g[3]->add(t[3]);
+	g[3]->add(model[5]);
+
+	//..................................L..
+	model[6] = new SnModel;
+	model[6]->model()->make_cylinder(GsPnt(5.0f, 1.0f, 0.0f), GsPnt(7.0f, 1.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[6]->color(GsColor::gray);
+	g[3]->add(model[6]);
+	g[3]->separator(true);
+
+
+	//.....//.......//.......//...............Right leg
+
+	t[4] = new SnTransform;
+	g[4] = new SnGroup;
+	/*m[4].translation(0.0f, -2.0f, 0.0f);
+	t[4]->set(m[4]);*/
+
+	model[7] = new SnModel;
+	model[7]->model()->make_cylinder(GsPnt(1.0f, -3.0f, 0.0f), GsPnt(1.0f, -6.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[7]->color(GsColor::gray);
+	g[4]->add(t[4]);
+	g[4]->add(model[7]);
+	//..................................Rl...
+	model[8] = new SnModel;
+	model[8]->model()->make_cylinder(GsPnt(1.0f, -6.0f, 0.0f), GsPnt(1.0f, -8.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[8]->color(GsColor::gray);
+	g[4]->add(model[8]);
+	g[4]->separator(true);
+
+
+
+
+	//..........//........//.........//......leftleg
+	t[5] = new SnTransform;
+	g[5] = new SnGroup;
+	/*m[5].translation(0.0f, -2.0f, 0.0f);
+	t[5]->set(m[5]);*/
+
+	model[9] = new SnModel;
+	//g[5] = new SnGroup;
+	model[9]->model()->make_cylinder(GsPnt(-1.0f, -3.0f, 0.0f), GsPnt(-1.0f, -6.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[9]->color(GsColor::gray);
+	g[5]->add(t[5]);
+	g[5]->add(model[9]);
+
+	//..................................l...
+	model[10] = new SnModel;
+	model[10]->model()->make_cylinder(GsPnt(-1.0f, -6.0f, 0.0f), GsPnt(-1.0f, -8.0f, 0.0f), 0.5f, 0.5f, 20, true);
+	model[10]->color(GsColor::gray);
+
+	g[5]->add(model[10]);
+	g[5]->separator(true);
+	//......//.......//......//......................
+
+
+	GsMat matrix;
+	SnGroup* Char = new SnGroup;
+	Char->add(mt);//controls the global transform for the robot body
+	matrix.setrans(GsVec(0.0f, 8.0f, 0.0f));
+	mt->set(matrix);
+	for (int i = 0; i < 6; i++)
+	{
+		mg->add(g[i]);
+	}
+	Char->add(mg);
+	rootg()->add(Char);
+}
 void MyViewer::build_scene ()
 {
 	// this project will have 3 main groups from root
@@ -330,30 +476,51 @@ void MyViewer::build_scene ()
 	//environment sub groups: 
 	buildEnvironment();//attatch egroup(separator true) to root. egroup consists of global transform, floor group(sep. true), house group(sep true).
 	buildCharacter();//steve is index 1 from root. adds character group to root(sep. true). this group consists of global transform and body group(sep true)
-	generatePaths();
+	buildRobot();
+	generatePaths();//rootg->2
 	buildCars();
-	//buildRobot();
-
 }
-
+void MyViewer::moveCars() {
+	//get car model
+	SnTransform* car1T = ((rootg()->get<SnGroup>(0))->get<SnGroup>(2))->get<SnTransform>(0);
+	GsMat mat;
+	//static so we can track this variable through this function
+	static int index = 0;//controls what index of the curve we are on
+	//get curve array
+	GsArray<GsPnt>* curvePnts = &((rootg()->get<SnGroup>(2))->get<SnLines>(0)->V);
+	//check if index goes out of bounds
+	if (index >= curvePnts->size())
+		index = 0;//reset the variable
+	mat.setrans(GsVec(curvePnts->get(index).x, curvePnts->get(index).y, curvePnts->get(index).z));
+	car1T->set(mat);
+	index++;
+	//gsout << "index: " << index << gsnl;
+	return;
+}
 // Below is an example of how to control the main loop of an animation:
 void MyViewer::run_animation ()
 {
+	
 	if ( _animating ) return; // avoid recursive calls
 	_animating = true;
-	
+	int index = 0;
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
 	double v = 4; // target velocity is 1 unit per second
 	double t=0, lt=0, t0=gs_time();
 	do // run for a while:
-	{	while ( t-lt<frdt ) { ws_check(); t=gs_time()-t0; } // wait until it is time for next frame
-		double yinc = (t-lt)*v;
-		if ( t>2 ) yinc=-yinc; // after 2 secs: go down
-		lt = t;
-		if ( <0 ) ; // make sure it does not go below 0
+	{	while ( t-lt<frdt ) { 
+			ws_check(); 
+			t=gs_time()-t0; 
+		} // wait until it is time for next frame
+		//double yinc = (t-lt)*v;
+		if (t > 0.125f) { // after x secs
+			moveCars();                                                               
+		}
+		lt = t;//update lastTime
+		t0 = gs_time();//update t0 so that it resets t to 0
 		render(); // notify it needs redraw
 		ws_check(); // redraw now
-	}	while ( >0 );
+	}	while ( _animating );
 	_animating = false;
 }
 
