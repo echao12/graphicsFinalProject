@@ -205,18 +205,18 @@ GsPnt MyViewer::eval_Bezier(float t, const GsArray<GsPnt>& P) {
 void MyViewer::generatePaths() {
 	SnLines* path = new SnLines;//create path
 	path->init();
-	path->color(GsColor::yellow);
+	path->color(GsColor::magenta);
 	path->line_width(3.5f);
 	GsArray<GsPnt> controlPnts;//generate control points for curve
 	//GsArray<GsPnt>* curvePnts;//will need to keep curvePnts
 	SnGroup* pathG = new SnGroup;//will be a subgroup of environment
 	pathG->separator(true);
 
-	float height = 0.5f;
+	float height = 0.25f;
 	controlPnts.push() = GsPnt(-2, height, 0);
-	controlPnts.push() = GsPnt(0, height, -5);
-	controlPnts.push() = GsPnt(-2, height, -20);
-	float delta = 0.125f;
+	controlPnts.push() = GsPnt(0, height, 10);
+	controlPnts.push() = GsPnt(-2, height, 20);
+	float delta = 0.125f/2.0f;
 
 	path->begin_polyline();
 	for (float t = 0; t < 1.0f; t += delta) {
@@ -476,11 +476,13 @@ void MyViewer::build_scene ()
 	//environment sub groups: 
 	buildEnvironment();//attatch egroup(separator true) to root. egroup consists of global transform, floor group(sep. true), house group(sep true).
 	buildCharacter();//steve is index 1 from root. adds character group to root(sep. true). this group consists of global transform and body group(sep true)
-	buildRobot();
+	//buildRobot();
 	generatePaths();//rootg->2
 	buildCars();
 }
 void MyViewer::moveCars() {
+	if (CarMoving == false)
+		return;
 	//get car model
 	SnTransform* car1T = ((rootg()->get<SnGroup>(0))->get<SnGroup>(2))->get<SnTransform>(0);
 	GsMat mat;
@@ -503,21 +505,26 @@ void MyViewer::run_animation ()
 	
 	if ( _animating ) return; // avoid recursive calls
 	_animating = true;
+	CarMoving = false;
 	int index = 0;
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
 	double v = 4; // target velocity is 1 unit per second
 	double t=0, lt=0, t0=gs_time();
-	do // run for a while:
-	{	while ( t-lt<frdt ) { 
-			ws_check(); 
-			t=gs_time()-t0; 
-		} // wait until it is time for next frame
+	do {// run for a while:
+	//{	while ( t-lt<frdt ) { 
+	//		ws_check(); 
+	//		t=gs_time()-t0; 
+	//	} // wait until it is time for next frame
 		//double yinc = (t-lt)*v;
-		if (t > 0.125f) { // after x secs
-			moveCars();                                                               
+		t = gs_time() - t0;
+		if (t > 0.0125f) { // after x secs
+			CarMoving = true;
+			moveCars();   
+			CarMoving = false;
+			t0 = gs_time();//update t0 so that it resets t to 0
 		}
-		lt = t;//update lastTime
-		t0 = gs_time();//update t0 so that it resets t to 0
+		//lt = t;//update lastTime
+
 		render(); // notify it needs redraw
 		ws_check(); // redraw now
 	}	while ( _animating );
