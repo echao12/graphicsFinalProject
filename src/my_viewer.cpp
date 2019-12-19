@@ -747,7 +747,7 @@ void MyViewer::spawnNPC() {
 	// these won't be moving. to make it easier to control
 	// specific npc's, spawn those first above this line
 	addNPC(GsVec(90, 0, 90));
-	addNPC(GsVec(50, 0, 50));
+	addNPC(GsVec(50, 0, 65));
 	addNPC(GsVec(58, 0, 60));
 	addNPC(GsVec(53, 0, 53));
 	addNPC(GsVec(-50, 0, 95));
@@ -758,6 +758,25 @@ void MyViewer::spawnNPC() {
 	addNPC(GsVec(53, 0, 160));
 	addNPC(GsVec(50, 0, 163));
 	addNPC(GsVec(-50,0,170));
+
+	addNPC(GsVec(-190, 0, 160));
+	addNPC(GsVec(-187, 0, 170));
+	addNPC(GsVec(-190, 0, 270));
+	addNPC(GsVec(-189, 0, 290));
+
+	addNPC(GsVec(-45, 0, 195));
+	addNPC(GsVec(-55, 0, 180));
+
+	addNPC(GsVec(150, 0, 65));
+	addNPC(GsVec(158, 0, 60));
+	addNPC(GsVec(153, 0, 70));
+
+	addNPC(GsVec(202, 0, 65));
+	addNPC(GsVec(208, 0, 60));
+	addNPC(GsVec(203, 0, 70));
+	addNPC(GsVec(208, 0, 60));
+	addNPC(GsVec(205, 0, 55));
+	addNPC(GsVec(203, 0, 58));
 }
 
 void MyViewer::build_scene ()
@@ -929,7 +948,7 @@ void MyViewer::run_animation ()
 				ws_check();
 				jumped = true;
 			}
-			while (addz < 100.0f) {
+			while (addz < 75.0f) {
 				render();
 				ws_check();
 				addz += 0.25f;
