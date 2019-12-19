@@ -40,7 +40,107 @@ void MyViewer::build_ui ()
 	p->add ( new UiButton ( "Exit", EvExit ) ); p->top()->separate();
 }
 
-void MyViewer::add_model(SnShape* s, GsVec p) { return; }//not ganna use this
+void MyViewer::add_model(SnShape* s, GsVec p) { return;}
+void MyViewer::addNPC(GsVec p) {
+	// will generate a new NPC at position p
+	SnGroup* group[6], * gCharacter, * gBody;// = new SnGroup;
+	SnPrimitive* model[6];// , * sModel[6]; // head, body, arms, legs and shadow counter-parts
+	SnTransform* trans[6], * tCharacter; // holds transform for each part
+	GsMat m[6]; // allows alteration of each transform
+	GsBox b[6]; // holds bounding box for each part.
+	GsColor c1 = GsColor::random();
+	GsColor c2 = GsColor::random();
+	GsColor c3 = GsColor::random();
+	//steve's head, index 0
+	model[0] = new SnPrimitive(GsPrimitive::Box, 0.125f, 0.125f, 0.125f);//radius on each axis
+	model[0]->model()->get_bounding_box(b[0]);
+	model[0]->prim().material.diffuse = c1;
+	trans[0] = new SnTransform;
+	trans[0]->set(m[0]);
+	group[0] = new SnGroup;
+	group[0]->separator(true);
+	group[0]->add(trans[0]);
+	group[0]->add(model[0]);
+
+	//steve's body
+	model[1] = new SnPrimitive(GsPrimitive::Box, 0.125f, 0.25f, 0.07f);
+	model[1]->model()->get_bounding_box(b[1]);
+	model[1]->prim().material.diffuse = c2;
+	trans[1] = new SnTransform;
+	m[1].translation(GsVec(0.0f, (-1 * b[0].dy() / 2.0f) + (-1 * b[1].dy() / 2.0f), 0.0f));
+	trans[1]->set(m[1]);
+	group[1] = new SnGroup;
+	group[1]->separator(true);
+	group[1]->add(trans[1]);
+	group[1]->add(model[1]);
+
+	//left arm
+	model[3] = new SnPrimitive(GsPrimitive::Box, 0.125f / 2, 0.25f, 0.07f);
+	model[3]->model()->get_bounding_box(b[3]);
+	model[3]->prim().material.diffuse = c1;
+	trans[3] = new SnTransform;
+	m[3].translation(GsVec((-1 * b[1].dx() / 2) + (-1 * b[3].dx() / 2), (-1 * b[0].dy() / 2.0f) + (-1 * b[1].dy() / 2.0f), 0.0f));
+	trans[3]->set(m[3]);
+	group[3] = new SnGroup;
+	group[3]->separator(true);
+	group[3]->add(trans[3]);
+	group[3]->add(model[3]);
+
+	//right arm
+	model[2] = new SnPrimitive(GsPrimitive::Box, 0.125f / 2, 0.25f, 0.07f);
+	model[2]->model()->get_bounding_box(b[2]);
+	model[2]->prim().material.diffuse = c1;
+	trans[2] = new SnTransform;
+	m[2].translation(GsVec((b[1].dx() / 2) + (b[2].dx() / 2), (-1 * b[0].dy() / 2.0f) + (-1 * b[1].dy() / 2.0f), 0.0f));
+	trans[2]->set(m[2]);
+	group[2] = new SnGroup;
+	group[2]->separator(true);
+	group[2]->add(trans[2]);
+	group[2]->add(model[2]);
+
+	//left leg
+	model[5] = new SnPrimitive(GsPrimitive::Box, b[1].dx() / 4, b[1].dy() / 2, b[1].dz() / 2);
+	model[5]->model()->get_bounding_box(b[5]);
+	model[5]->prim().material.diffuse = c3;
+	trans[5] = new SnTransform;
+	m[5].translation(GsVec((-1 * b[1].dx() / 4), (-1 * b[1].dy()) + (-1 * b[0].dy() / 2) + (-1 * b[5].dy() / 2), 0.0f));
+	trans[5]->set(m[5]);
+	group[5] = new SnGroup;
+	group[5]->separator(true);
+	group[5]->add(trans[5]);
+	group[5]->add(model[5]);
+
+	//right leg
+	model[4] = new SnPrimitive(GsPrimitive::Box, b[1].dx() / 4, b[1].dy() / 2, b[1].dz() / 2);
+	model[4]->model()->get_bounding_box(b[4]);
+	model[4]->prim().material.diffuse = c3;
+	trans[4] = new SnTransform;
+	m[4].translation(GsVec((b[1].dx() / 4), (-1 * b[1].dy()) + (-1 * b[0].dy() / 2) + (-1 * b[4].dy() / 2), 0.0f));
+	trans[4]->set(m[4]);
+	group[4] = new SnGroup;
+	group[4]->separator(true);
+	group[4]->add(trans[4]);
+	group[4]->add(model[4]);
+
+	GsMat cMat;
+	cMat.scaling(10.0f);
+	cMat.setrans(GsVec(p.x, 10.0f + ((b[0].dy() / 2) + (b[1].dy()) + (b[4].dy())) + p.y, p.z));
+	tCharacter = new SnTransform;
+	tCharacter->set(cMat);
+	//tCharacter->get().translation(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
+	gCharacter = new SnGroup;
+	gBody = new SnGroup;
+
+	gBody->separator(true);
+	for (int i = 0; i < 6; i++) {
+		gBody->add(group[i]);//attach each part into a character group
+	}
+	gCharacter->separator(true);
+	gCharacter->add(tCharacter);
+	gCharacter->add(gBody);
+	rootg()->add(gCharacter);
+
+}
 
 void MyViewer::buildCharacter() {
 
@@ -122,7 +222,7 @@ void MyViewer::buildCharacter() {
 
 	GsMat cMat;
 	cMat.scaling(10.0f);
-	cMat.setrans(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
+	cMat.setrans(GsVec(0.0f, 10.0f + ((b[0].dy() / 2) + (b[1].dy()) + (b[4].dy())), 0.0f));
 	tCharacter = new SnTransform;
 	tCharacter->set(cMat);
 	//tCharacter->get().translation(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
@@ -231,9 +331,6 @@ void MyViewer::generatePaths() {
 	paths[0]->color(GsColor::cyan);
 	paths[0]->line_width(3.5f);
 
-
-
-
 	//GsArray<GsPnt>* curvePnts;//will need to keep curvePnts
 	SnGroup* pathG = new SnGroup;//will be a subgroup of environment
 	pathG->separator(true);
@@ -255,8 +352,8 @@ void MyViewer::generatePaths() {
 	paths[1]->color(GsColor::yellow);
 	paths[1]->line_width(1.5f);
 
-	cPnts[1].push() = GsPnt(50, height, -50);
-	cPnts[1].push() = GsPnt(50, height, 50);
+	cPnts[1].push() = GsPnt(50, height*100, -50);
+	cPnts[1].push() = GsPnt(50, height*100, 50);
 
 
 	//controlPnts.push() = GsPnt(-2, height, 20);
@@ -399,7 +496,7 @@ void MyViewer::buildRobot() {
 	//body 
 	model[0] = new SnModel;
 	model[0]->model()->make_cylinder(GsPnt(0.0f, 3.0f, 0.0f), GsPnt(0.0f, -3.0f, 0.0f), 2.0f, 2.0f, 20, true);
-	model[0]->color(GsColor::gray);
+	model[0]->color(GsColor::red);
 	g[0]->add(t[0]);
 	g[0]->add(model[0]);
 	g[0]->separator(true);
@@ -414,14 +511,14 @@ void MyViewer::buildRobot() {
 	model[1] = new SnModel;
 	g[1] = new SnGroup;
 	model[1]->model()->make_cylinder(GsPnt(0.0f, 4.5f, 0.0f), GsPnt(0.0f, 3.0f, 0.0f), 0.2f, 0.2f, 20, true);
-	model[1]->color(GsColor::gray);
+	model[1]->color(GsColor::blue);
 	g[1]->add(t[1]);
 	g[1]->add(model[1]);
 
 	//..................................The head of character
 	model[2] = new SnModel;
 	model[2]->model()->make_cylinder(GsPnt(0.0f, 5.7f, 0.0f), GsPnt(0.0f, 4.5f, 0.0f), 0.9f, 0.9f, 20, true);
-	model[2]->color(GsColor::gray);
+	model[2]->color(GsColor::red);
 	g[1]->add(model[2]);
 	g[1]->separator(true);
 
@@ -435,7 +532,7 @@ void MyViewer::buildRobot() {
 
 	model[3] = new SnModel;
 	model[3]->model()->make_cylinder(GsPnt(-5.0f, 1.0f, 0.0f), GsPnt(0.0f, 1.0f, 0.0f), 0.75f, 0.75f, 20, true);
-	model[3]->color(GsColor::gray);
+	model[3]->color(GsColor::blue);
 	g[2]->add(t[2]);
 	g[2]->add(model[3]);
 
@@ -443,7 +540,7 @@ void MyViewer::buildRobot() {
 	//.....................................R
 	model[4] = new SnModel;
 	model[4]->model()->make_cylinder(GsPnt(-7.0f, 1.0f, 0.0f), GsPnt(-5.0f, 1.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[4]->color(GsColor::gray);
+	model[4]->color(GsColor::red);
 	g[2]->add(model[4]);
 	g[2]->separator(true);
 
@@ -457,14 +554,14 @@ void MyViewer::buildRobot() {
 
 	model[5] = new SnModel;
 	model[5]->model()->make_cylinder(GsPnt(0.0f, 1.0f, 0.0f), GsPnt(5.0f, 1.0f, 0.0f), 0.75f, 0.75f, 20, true);
-	model[5]->color(GsColor::gray);
+	model[5]->color(GsColor::blue);
 	g[3]->add(t[3]);
 	g[3]->add(model[5]);
 
 	//..................................L..
 	model[6] = new SnModel;
 	model[6]->model()->make_cylinder(GsPnt(5.0f, 1.0f, 0.0f), GsPnt(7.0f, 1.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[6]->color(GsColor::gray);
+	model[6]->color(GsColor::red);
 	g[3]->add(model[6]);
 	g[3]->separator(true);
 
@@ -478,13 +575,13 @@ void MyViewer::buildRobot() {
 
 	model[7] = new SnModel;
 	model[7]->model()->make_cylinder(GsPnt(1.0f, -3.0f, 0.0f), GsPnt(1.0f, -6.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[7]->color(GsColor::gray);
+	model[7]->color(GsColor::blue);
 	g[4]->add(t[4]);
 	g[4]->add(model[7]);
 	//..................................Rl...
 	model[8] = new SnModel;
 	model[8]->model()->make_cylinder(GsPnt(1.0f, -6.0f, 0.0f), GsPnt(1.0f, -8.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[8]->color(GsColor::gray);
+	model[8]->color(GsColor::red);
 	g[4]->add(model[8]);
 	g[4]->separator(true);
 
@@ -500,14 +597,14 @@ void MyViewer::buildRobot() {
 	model[9] = new SnModel;
 	//g[5] = new SnGroup;
 	model[9]->model()->make_cylinder(GsPnt(-1.0f, -3.0f, 0.0f), GsPnt(-1.0f, -6.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[9]->color(GsColor::gray);
+	model[9]->color(GsColor::blue);
 	g[5]->add(t[5]);
 	g[5]->add(model[9]);
 
 	//..................................l...
 	model[10] = new SnModel;
 	model[10]->model()->make_cylinder(GsPnt(-1.0f, -6.0f, 0.0f), GsPnt(-1.0f, -8.0f, 0.0f), 0.5f, 0.5f, 20, true);
-	model[10]->color(GsColor::gray);
+	model[10]->color(GsColor::red);
 
 	g[5]->add(model[10]);
 	g[5]->separator(true);
@@ -608,6 +705,24 @@ void MyViewer::animateRobot() {
 	//_animating = false;
 
 }
+
+void MyViewer::spawnNPC() {
+	// these won't be moving. to make it easier to control
+	// specific npc's, spawn those first above this line
+	addNPC(GsVec(90, 0, 90));
+	addNPC(GsVec(50, 0, 50));
+	addNPC(GsVec(58, 0, 60));
+	addNPC(GsVec(53, 0, 53));
+	addNPC(GsVec(-50, 0, 95));
+	addNPC(GsVec(-58, 0, 80));
+	addNPC(GsVec(-90, 0, 90));
+
+	addNPC(GsVec(-90, 0, 160));
+	addNPC(GsVec(53, 0, 160));
+	addNPC(GsVec(50, 0, 163));
+	addNPC(GsVec(-50,0,170));
+}
+
 void MyViewer::build_scene ()
 {
 	// this project will have 3 main groups from root
@@ -618,6 +733,10 @@ void MyViewer::build_scene ()
 	generatePaths();//rootg->2
 	buildRobot();// rootg->3
 	buildCars();// rootg ->4
+	spawnNPC();
+}
+void moveNPC() {
+	//will move the npc's along the dedicated path
 }
 void MyViewer::moveCars() {
 	if (CarMoving == false)
@@ -639,6 +758,23 @@ void MyViewer::moveCars() {
 	//gsout << "index: " << index << gsnl;
 	return;
 }
+void MyViewer::moveRobot() {
+	//will move global transform of robot along a curve.
+	//will use path 2(yellow curve)
+	GsArray<GsPnt>* pathPnts = &((rootg()->get<SnGroup>(2)->get<SnLines>(2))->V);
+	//get transform of the robot
+	SnTransform* robT = rootg()->get<SnGroup>(3)->get<SnTransform>(0);
+	static int index = 0;
+	GsMat trans;
+	if (index >= pathPnts->size()) {
+		index = 0;
+	}
+	trans.set(robT->get());
+	trans.setrans(GsVec(pathPnts->get(index).x, pathPnts->get(index).y, pathPnts->get(index).z));
+	robT->set(trans);
+	index++;
+	return;
+}
 // Below is an example of how to control the main loop of an animation:
 void MyViewer::run_animation ()
 {
@@ -647,6 +783,7 @@ void MyViewer::run_animation ()
 	_animating = true;
 	CarMoving = false;
 	int index = 0;
+	static int robI = 0;
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
 	double v = 4; // target velocity is 1 unit per second
 	double t=0, lt=0, t0=gs_time();
@@ -662,7 +799,10 @@ void MyViewer::run_animation ()
 			CarMoving = true;
 			moveCars();
 			animateRobot();
+			if(robI%3 == 0)
+				moveRobot();
 			CarMoving = false;
+			robI++;
 			t0 = gs_time();//update t0 so that it resets t to 0
 		}
 		//lt = t;//update lastTime

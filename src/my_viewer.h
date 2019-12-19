@@ -29,9 +29,12 @@ class MyViewer : public WsViewer
 	MyViewer ( int x, int y, int w, int h, const char* l );
 	void build_ui ();
 	void add_model ( SnShape* s, GsVec p );
+	void addNPC( GsVec p);
+	void spawnNPC();
 	void build_scene ();
 	void show_normals ( bool view );
 	void run_animation ();
+	void moveRobot();
 	bool CarMoving;
 	virtual int handle_keyboard ( const GsEvent &e ) override;
 	virtual int uievent ( int e ) override;
