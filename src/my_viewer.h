@@ -23,6 +23,7 @@ class MyViewer : public WsViewer
 	void buildCars();
 	void moveCars();
 	void buildRobot();
+	void animateRobot();
 	GsPnt eval_Bezier(float, const GsArray<GsPnt>& P);
    public :
 	MyViewer ( int x, int y, int w, int h, const char* l );

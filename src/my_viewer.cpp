@@ -40,11 +40,10 @@ void MyViewer::build_ui ()
 	p->add ( new UiButton ( "Exit", EvExit ) ); p->top()->separate();
 }
 
-void MyViewer::add_model ( SnShape* s, GsVec p )
-{
+void MyViewer::add_model(SnShape* s, GsVec p) { return; }//not ganna use this
 
-}
 void MyViewer::buildCharacter() {
+
 	SnGroup *group[6], *gCharacter, *gBody;// = new SnGroup;
 	SnPrimitive* model[6];// , * sModel[6]; // head, body, arms, legs and shadow counter-parts
 	SnTransform* trans[6], *tCharacter; // holds transform for each part
@@ -121,8 +120,12 @@ void MyViewer::buildCharacter() {
 	group[4]->add(trans[4]);
 	group[4]->add(model[4]);
 
+	GsMat cMat;
+	cMat.scaling(10.0f);
+	cMat.setrans(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
 	tCharacter = new SnTransform;
-	tCharacter->get().translation(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
+	tCharacter->set(cMat);
+	//tCharacter->get().translation(GsVec(0.0f, (b[0].dy() / 2) + (b[1].dy()) + (b[4].dy()), 0.0f));
 	gCharacter = new SnGroup;
 	gBody = new SnGroup;
 
@@ -136,20 +139,27 @@ void MyViewer::buildCharacter() {
 	rootg()->add(gCharacter);
 }
 void MyViewer::buildEnvironment() {
-	SnGroup *eGroup, *floorGroup;
-	SnPrimitive *floor;
+	SnGroup *eGroup, *floorGroup;//floor group will be attatched to egroup.
+	SnModel *floor;//the city model
 	GsBox fBox;
 	GsMat fMat;
 	
-	floor = new SnPrimitive(GsPrimitive::Box, 5.0f, 0.25f, 5.0f);
-	floor->prim().material.diffuse = GsColor::green;
-	floor->prim().get_bounding_box(fBox);
+	//floor = new SnPrimitive(GsPrimitive::Box, 5.0f, 0.25f, 5.0f);
+	//floor->prim().material.diffuse = GsColor::green;
+	floor = new SnModel;
+	floor->model()->load("../EnvironmentModels/city.obj");
+	floor->model()->get_bounding_box(fBox);
+	//floor->prim().get_bounding_box(fBox);
 
 	SnTransform *floorTrans, *globalTrans;
-	globalTrans = new SnTransform;
-	floorTrans = new SnTransform;
+	globalTrans = new SnTransform;//will gobablly move all objects attatched to egroup
+	floorTrans = new SnTransform;//will move the city model independently
 
-	fMat.translation(0, fBox.dy()/-2.0f, 0);
+	//fMat.translation(0, fBox.dy()/-2.0f, 0);
+	//fMat.translation(0, fBox.dy()*-1, 0);
+	
+	fMat.scaling(0.25);//SHRINKING DOWN THE CITY MODEL. 0.25 IS THE LOWER THRESHOLD BEFORE ERRORS ARE THROWN
+	fMat.setrans(GsVec((fBox.dx()/4)/5.0f,29.0f, 0.0f));// THIS GLOBALLY MOVES THE CITY MODEL. THE TRANSLATION IS SEPARATE FROM EVERYTHING ELSE
 	floorTrans->set(fMat);
 
 	floorGroup = new SnGroup;
@@ -171,7 +181,11 @@ void MyViewer::buildEnvironment() {
 	houseM = new SnModel;
 	houseM->model()->load("../Car-Model/Car.obj");
 	houseM->model()->get_bounding_box(houseB);
-	houseMat.translation(GsVec(0.0f,0.0f, -3.0f));
+	houseMat.scaling(5.0f);
+	houseMat.setrans(GsVec(0.0f,0.0f, -3.0f));
+	GsMat rotation;
+	rotation.roty(float(GS_PI));
+	houseMat.mult(rotation, houseMat);
 	houseT = new SnTransform;
 	houseT->set(houseMat);
 
@@ -203,29 +217,72 @@ GsPnt MyViewer::eval_Bezier(float t, const GsArray<GsPnt>& P) {
 	return point;
 }
 void MyViewer::generatePaths() {
-	SnLines* path = new SnLines;//create path
+	SnLines *path = new SnLines;//create magenta path
+	SnLines *paths[2];//create another path as array to make it easier to add more later
+	GsArray<GsPnt> controlPnts;//generate control points for magenta curve
+	GsArray<GsPnt> cPnts[2];
+	paths[0] = new SnLines;
+
 	path->init();
 	path->color(GsColor::magenta);
 	path->line_width(3.5f);
-	GsArray<GsPnt> controlPnts;//generate control points for curve
+
+	paths[0]->init();
+	paths[0]->color(GsColor::cyan);
+	paths[0]->line_width(3.5f);
+
+
+
+
 	//GsArray<GsPnt>* curvePnts;//will need to keep curvePnts
 	SnGroup* pathG = new SnGroup;//will be a subgroup of environment
 	pathG->separator(true);
 
 	float height = 0.25f;
-	controlPnts.push() = GsPnt(-2, height, 0);
-	controlPnts.push() = GsPnt(0, height, 10);
-	controlPnts.push() = GsPnt(-2, height, 20);
-	float delta = 0.125f/2.0f;
+	//for the first curve. the magenta one
+	controlPnts.push() = GsPnt(-10, height, 385);
+	controlPnts.push() = GsPnt(-10, height, 0);
+	controlPnts.push() = GsPnt(-10, height, -165);
+
+	cPnts[0].push() = GsPnt(10, height, 385);
+	cPnts[0].push() = GsPnt(10, height, 0);
+	cPnts[0].push() = GsPnt(10, height, -165);
+
+	//generate path for robot to walk
+
+	paths[1] = new SnLines;
+	paths[1]->init();
+	paths[1]->color(GsColor::yellow);
+	paths[1]->line_width(1.5f);
+
+	cPnts[1].push() = GsPnt(50, height, -50);
+	cPnts[1].push() = GsPnt(50, height, 50);
+
+
+	//controlPnts.push() = GsPnt(-2, height, 20);
+	float delta = 0.125f/8.0f;
 
 	path->begin_polyline();
+	paths[0]->begin_polyline();
+	paths[1]->begin_polyline();
 	for (float t = 0; t < 1.0f; t += delta) {
+		//for the first curve. magenta one
 		GsPnt pnt = eval_Bezier(t, controlPnts);
 		path->push(pnt);//to display the curve
-		//curvePnts->push(pnt);// to easily access the values of the curve points
+		//for the 2nd curve, cyan
+		pnt = eval_Bezier(t, cPnts[0]);
+		paths[0]->push(pnt);
+
+		pnt = eval_Bezier(t, cPnts[1]);
+		paths[1]->push(pnt);
 	}
 	path->end_polyline();
-	pathG->add(path);
+	paths[0]->end_polyline();
+	paths[1]->end_polyline();
+
+	pathG->add(path);//0
+	pathG->add(paths[0]);//1
+	pathG->add(paths[1]);
 	rootg()->add(pathG);
 }
 void MyViewer::buildCars() {
@@ -459,8 +516,10 @@ void MyViewer::buildRobot() {
 
 	GsMat matrix;
 	SnGroup* Char = new SnGroup;
+	Char->separator(true);
 	Char->add(mt);//controls the global transform for the robot body
-	matrix.setrans(GsVec(0.0f, 8.0f, 0.0f));
+	matrix.scaling(2.0f);
+	matrix.setrans(GsVec(0.0f, 18.0f, -5.0f));
 	mt->set(matrix);
 	for (int i = 0; i < 6; i++)
 	{
@@ -469,6 +528,86 @@ void MyViewer::buildRobot() {
 	Char->add(mg);
 	rootg()->add(Char);
 }
+void MyViewer::animateRobot() {
+	//will generate robot animation.
+	GsMat rotation;
+	GsMat tp, tn;
+	GsVec pos;
+
+	//if (_animating) return; // avoid recursive calls
+	//_animating = true;
+	//*note* t0->head&neck t2-> right arm t3-> left arm t4->right leg t5-> left leg
+	SnTransform* t[6];
+	//we only neeed t5 and t4;
+	t[5] = (rootg()->get<SnGroup>(3)->get<SnGroup>(1))->get<SnGroup>(5)->get<SnTransform>(0);
+	t[4] = (rootg()->get<SnGroup>(3)->get<SnGroup>(1))->get<SnGroup>(4)->get<SnTransform>(0);
+	
+	// ANIMATION PART FOR MOVING LEGS 
+	double frdt = 1.0 / 30.0; // delta time to reach given number of frames per second
+	static float rightlegangle = 0, leftlegangle = 0;
+	static double ti = 0, lt = 0, t0 = gs_time();//t0 current
+	//do // run for a while:
+	//{
+		while (ti - lt < frdt) { ws_check(); ti = gs_time() - t0; } // wait until it is time for next frame
+
+
+		if (ti >= 0 && ti < 0.4)
+		{
+			if (rightlegangle + ((float)GS_PIDIV2 / 20.0f) < (float)GS_PIDIV2 / 3) {
+				rightlegangle += (float)GS_PIDIV2 / 20.0f;
+				rotation.rotx((float)GS_PIDIV2 / 20.0f);
+				t[4]->get().mult(t[4]->get(), rotation);
+			}
+		}
+
+		else if (ti >= 0.4 && ti < 0.8)
+
+		{
+			if (rightlegangle - ((float)GS_PIDIV2 / 20.0f) >= 0) {
+				rightlegangle = rightlegangle - (float)GS_PIDIV2 / 20.0f;
+				rotation.rotx(-1 * (float)GS_PIDIV2 / 20.0f);
+				t[4]->get().mult(t[4]->get(), rotation);
+			}
+
+		}
+		else if (ti >= 0.8 && ti < 1.2)
+
+		{
+			if (leftlegangle + ((float)GS_PIDIV2 / 20.0f) < (float)GS_PIDIV2 / 3) {
+				leftlegangle = leftlegangle + (float)GS_PIDIV2 / 20.0f;
+				rotation.rotx((float)GS_PIDIV2 / 20.0f);
+				t[5]->get().mult(t[5]->get(), rotation);
+			}
+
+		}
+
+		else if (ti >= 1.2 && ti < 1.6)
+
+		{
+			if (leftlegangle + ((float)GS_PIDIV2 / 20.0f) >= 0) {
+				leftlegangle = leftlegangle - (float)GS_PIDIV2 / 20.0f;
+				rotation.rotx(-1 * (float)GS_PIDIV2 / 20.0f);
+				t[5]->get().mult(t[5]->get(), rotation);
+			}
+
+		}
+		//gsout << ti << gsnl;
+		if (ti >= 1.6)
+		{
+			ti = 0, lt = 0, t0 = gs_time();
+		}
+		else {
+
+			lt = ti;
+		}
+
+
+		render(); // notify it needs redraw
+		ws_check(); // redraw now
+	//} while (1); //put some condition to run -suggestion
+	//_animating = false;
+
+}
 void MyViewer::build_scene ()
 {
 	// this project will have 3 main groups from root
@@ -476,9 +615,9 @@ void MyViewer::build_scene ()
 	//environment sub groups: 
 	buildEnvironment();//attatch egroup(separator true) to root. egroup consists of global transform, floor group(sep. true), house group(sep true).
 	buildCharacter();//steve is index 1 from root. adds character group to root(sep. true). this group consists of global transform and body group(sep true)
-	//buildRobot();
 	generatePaths();//rootg->2
-	buildCars();
+	buildRobot();// rootg->3
+	buildCars();// rootg ->4
 }
 void MyViewer::moveCars() {
 	if (CarMoving == false)
@@ -493,7 +632,8 @@ void MyViewer::moveCars() {
 	//check if index goes out of bounds
 	if (index >= curvePnts->size())
 		index = 0;//reset the variable
-	mat.setrans(GsVec(curvePnts->get(index).x, curvePnts->get(index).y, curvePnts->get(index).z));
+	mat.set(car1T->get());//get old transform matrix
+	mat.setrans(GsVec(curvePnts->get(index).x, curvePnts->get(index).y, curvePnts->get(index).z));//set new translation coordinate w/o affecting scaling matrix
 	car1T->set(mat);
 	index++;
 	//gsout << "index: " << index << gsnl;
@@ -510,6 +650,7 @@ void MyViewer::run_animation ()
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
 	double v = 4; // target velocity is 1 unit per second
 	double t=0, lt=0, t0=gs_time();
+	
 	do {// run for a while:
 	//{	while ( t-lt<frdt ) { 
 	//		ws_check(); 
@@ -517,9 +658,10 @@ void MyViewer::run_animation ()
 	//	} // wait until it is time for next frame
 		//double yinc = (t-lt)*v;
 		t = gs_time() - t0;
-		if (t > 0.0125f) { // after x secs
+		if (t > 0.025f) { // after x secs
 			CarMoving = true;
-			moveCars();   
+			moveCars();
+			animateRobot();
 			CarMoving = false;
 			t0 = gs_time();//update t0 so that it resets t to 0
 		}
