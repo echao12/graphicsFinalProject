@@ -36,6 +36,7 @@ class MyViewer : public WsViewer
 	void run_animation ();
 	void moveRobot();
 	bool CarMoving;
+	bool cam;
 	virtual int handle_keyboard ( const GsEvent &e ) override;
 	virtual int uievent ( int e ) override;
 };

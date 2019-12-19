@@ -13,6 +13,7 @@ MyViewer::MyViewer ( int x, int y, int w, int h, const char* l ) : WsViewer(x,y,
 {
 	camY = 2;
 	camX = camZ = 1.0f;
+	cam = false;
 	strideNum = 0;
 	movingForward = true;
 	fixedCamera = true;
@@ -239,11 +240,14 @@ void MyViewer::buildCharacter() {
 	rootg()->add(gCharacter);
 }
 void MyViewer::buildEnvironment() {
-	SnGroup *eGroup, *floorGroup;//floor group will be attatched to egroup.
-	SnModel *floor;//the city model
+	SnGroup* eGroup, * floorGroup, * towerGroup;//floor group will be attatched to egroup.
+	SnModel* floor;//the city model
+	SnModel* tower;//the tower model
 	GsBox fBox;
 	GsMat fMat;
-	
+
+
+	/*CITY*/
 	//floor = new SnPrimitive(GsPrimitive::Box, 5.0f, 0.25f, 5.0f);
 	//floor->prim().material.diffuse = GsColor::green;
 	floor = new SnModel;
@@ -251,15 +255,15 @@ void MyViewer::buildEnvironment() {
 	floor->model()->get_bounding_box(fBox);
 	//floor->prim().get_bounding_box(fBox);
 
-	SnTransform *floorTrans, *globalTrans;
+	SnTransform* floorTrans, * globalTrans;
 	globalTrans = new SnTransform;//will gobablly move all objects attatched to egroup
 	floorTrans = new SnTransform;//will move the city model independently
 
 	//fMat.translation(0, fBox.dy()/-2.0f, 0);
 	//fMat.translation(0, fBox.dy()*-1, 0);
-	
+
 	fMat.scaling(0.25);//SHRINKING DOWN THE CITY MODEL. 0.25 IS THE LOWER THRESHOLD BEFORE ERRORS ARE THROWN
-	fMat.setrans(GsVec((fBox.dx()/4)/5.0f,29.0f, 0.0f));// THIS GLOBALLY MOVES THE CITY MODEL. THE TRANSLATION IS SEPARATE FROM EVERYTHING ELSE
+	fMat.setrans(GsVec((fBox.dx() / 4) / 5.0f, 29.0f, 0.0f));// THIS GLOBALLY MOVES THE CITY MODEL. THE TRANSLATION IS SEPARATE FROM EVERYTHING ELSE
 	floorTrans->set(fMat);
 
 	floorGroup = new SnGroup;
@@ -272,6 +276,8 @@ void MyViewer::buildEnvironment() {
 	eGroup->add(globalTrans);//egroup->0
 	eGroup->add(floorGroup);//egroup->1
 
+
+	/*CAR*/
 	SnGroup* houseG;
 	SnModel* houseM;
 	SnTransform* houseT;
@@ -282,7 +288,7 @@ void MyViewer::buildEnvironment() {
 	houseM->model()->load("../Car-Model/Car.obj");
 	houseM->model()->get_bounding_box(houseB);
 	houseMat.scaling(5.0f);
-	houseMat.setrans(GsVec(0.0f,0.0f, -3.0f));
+	houseMat.setrans(GsVec(0.0f, 0.0f, -3.0f));
 	GsMat rotation;
 	rotation.roty(float(GS_PI));
 	houseMat.mult(rotation, houseMat);
@@ -295,6 +301,37 @@ void MyViewer::buildEnvironment() {
 	houseG->add(houseM);
 
 	eGroup->add(houseG);//eGroup->2
+
+	/*TOWER*/
+	tower = new SnModel;
+	GsBox tBox;
+	GsMat tMat;
+	if (!tower->model()->load("../EnvironmentModels/tower.obj")) {
+		gsout << "tower not loaded";
+	}
+	tower->model()->get_bounding_box(tBox);
+
+
+	SnTransform* towerTrans, * gTrans;
+	gTrans = new SnTransform;//will gobablly move all objects attatched to egroup
+	towerTrans = new SnTransform;//will move the tower model independently
+
+	//fMat.translation(0, fBox.dy()/-2.0f, 0);
+	//fMat.translation(0, fBox.dy()*-1, 0);
+
+	tMat.scaling(30.0f);
+	tMat.setrans(GsVec((fBox.dx() / 4.5f) / 5.5f, -(fBox.dy() / 6.5f) / 2.0f, (fBox.dz() / 4) / 5.0f));// THIS GLOBALLY MOVES THE TOWER MODEL. THE TRANSLATION IS SEPARATE FROM EVERYTHING ELSE
+	towerTrans->set(tMat);
+
+	towerGroup = new SnGroup;
+	towerGroup->separator(true);
+	towerGroup->add(towerTrans);
+	towerGroup->add(tower);
+
+	//eGroup = new SnGroup;
+	//eGroup->separator(true);
+	//eGroup->add(gTrans);//egroup->3
+	eGroup->add(towerGroup);//egroup->4
 
 
 	rootg()->add(eGroup);
@@ -785,17 +822,22 @@ void MyViewer::run_animation ()
 	int index = 0;
 	static int robI = 0;
 	double frdt = 1.0/30.0; // delta time to reach given number of frames per second
-	double v = 4; // target velocity is 1 unit per second
-	double t=0, lt=0, t0=gs_time();
+	//double v = 4; // target velocity is 1 unit per second
+	double t=0, lt=0, t0=gs_time(), x=0, x0 = gs_time();
+	static float addz = 15.0f, addy = 15.0f;
+	//int ind = gs_random(0, rootg()->size() - 1); // pick one child
+	//SnManipulator* manip = rootg()->get<SnManipulator>(ind); // access one of the manipulators
+	//GsMat m = manip->mat();
 	
 	do {// run for a while:
-	//{	while ( t-lt<frdt ) { 
-	//		ws_check(); 
-	//		t=gs_time()-t0; 
-	//	} // wait until it is time for next frame
+		while ( t-lt<frdt ) { 
+			ws_check(); 
+			t=gs_time()-t0; 
+	} // wait until it is time for n
+		//ext frame
 		//double yinc = (t-lt)*v;
-		t = gs_time() - t0;
-		if (t > 0.025f) { // after x secs
+		x = gs_time() - x0;
+		if (x > 0.025f) { // after x secs
 			CarMoving = true;
 			moveCars();
 			animateRobot();
@@ -803,13 +845,115 @@ void MyViewer::run_animation ()
 				moveRobot();
 			CarMoving = false;
 			robI++;
-			t0 = gs_time();//update t0 so that it resets t to 0
+			x0 = gs_time();//update t0 so that it resets t to 0
 		}
 		//lt = t;//update lastTime
+		
+		lt = gs_time() - t0;
+		// -= would zoom in
+		// += would zoom out
+
+
+		if (cam == false) {
+			if (t > 0 && t < 2) {
+				camera().center.y = 100.0f;
+				camera().fovy -= 0.01f;
+			}
+			else if (t > 2 && t < 4) {
+				camera().eye.x -= 1.0f;
+				camera().center.y = 100.0f;
+			}
+			else if (t > 4 && t < 6) {
+				camera().eye.x -= 1.0f;
+				camera().center.y = 100.0f;
+			}
+			else if (t > 6 && t < 9) {
+				camera().eye.x -= 5.0f;
+				camera().center.y = 100.0f;
+			}
+			else if (t > 9 && t < 21) {
+				camera().eye.z -= 5.0f;
+				camera().center.y = 100.0f;
+			}
+			else if (t > 21 && t < 27) {
+				camera().center.y = 100.0f;
+				camera().eye.x += 5.0f;
+			}
+			else if (t > 27 && t < 38) {
+				camera().center.y = 100.0f;
+				camera().eye.z += 5.0f;
+			}
+			else if (t > 38 && t < 40) {
+				camera().center.y += 2.0f;
+				camera().eye.x -= 5.0f;
+			}
+			else if (t > 40 && t < 44) {
+				camera().center.x += 0.5f;
+			}
+			else if (t > 44 && t < 45.7) {
+				camera().center.y = 200.0f;
+				camera().center.x = 100.0f;
+				camera().center.z = 150.0f;
+				camera().fovy -= 0.02f;
+			}
+			else if (t > 45.7 && t < 48) {
+				camera().center.y = 200.0f;
+				camera().center.x = 100.0f;
+				camera().center.z = 150.0f;
+				camera().eye.z = -650.0f;
+				camera().fovy += 0.02f;
+
+			}
+		}
+
+		// This is the parameter for the pause camera 
+		else {
+			/*camera().eye.z = -648.046f;
+			camera().eye.y = 209.23f;
+			camera().eye.x = 7.60592f;
+			camera().center.z = 0.237752f;
+			camera().center.y = 15.6944f;
+			camera().center.x = 22.9082f;*/
+
+			SnTransform* headT = rootg()->get<SnGroup>(1)->get<SnTransform>(0);
+			static bool jumped = false;
+			if (jumped == false) {
+				//jump to character
+				camera().eye.z = headT->get().e34 + addz;
+				camera().eye.y = headT->get().e24 + addy;
+				camera().eye.x = headT->get().e14;
+				camera().center.z = headT->get().e34;
+				camera().center.y = headT->get().e24;
+				camera().center.x = headT->get().e14;
+				render();
+				ws_check();
+				jumped = true;
+			}
+			while (addz < 100.0f) {
+				render();
+				ws_check();
+				addz += 0.25f;
+				addy += 0.25f;
+				camera().eye.z = headT->get().e34 + addz;
+				camera().eye.y = headT->get().e24 + addy;
+				camera().eye.y = headT->get().e24 + addy;
+				render();
+				ws_check();
+			}
+				camera().eye.z = headT->get().e34 + addz;
+				camera().eye.y = headT->get().e24 + addy;
+				camera().eye.x = headT->get().e14;
+				camera().center.z = headT->get().e34;
+				camera().center.y = headT->get().e24;
+				camera().center.x = headT->get().e14;
+				render();
+				ws_check();
+		}
 
 		render(); // notify it needs redraw
 		ws_check(); // redraw now
-	}	while ( _animating );
+		message().setf("local time=%f", lt);
+	}	while ( 1 );
 	_animating = false;
 }
 
@@ -1285,47 +1429,8 @@ int MyViewer::handle_keyboard ( const GsEvent &e )
 		return 1;
 	}
 	case GsEvent::KeySpace: {
-		//change camera view from Birds Eye View to First Person View
-		double lt, t0;
-		if (fixedCamera == false) {
-			//Bird Eye View Following Player
-
-			camera().eye.y = b[0].dy() / 2 + b[1].dy() + b[4].dy() + 1.0f;
-			camera().eye.x = rootg()->get<SnTransform>(1)->get().e14;
-			camera().eye.z = rootg()->get<SnTransform>(1)->get().e34 - 5.0f;
-			camera().center.x = rootg()->get<SnTransform>(1)->get().e14;
-			camera().center.y = b[1].dy() + b[4].dy();
-			camera().center.z = rootg()->get<SnTransform>(1)->get().e34;
-			camera().up = cross(camera().center - camera().eye, GsVec::i);
-			t0 = gs_time();
-			do
-			{
-				lt = gs_time() - t0;
-				camera().eye.y = b[0].dy() / 2 + b[1].dy() + b[4].dy() + 1.0f;
-				camera().eye.x = rootg()->get<SnTransform>(1)->get().e14;
-				camera().eye.z = rootg()->get<SnTransform>(1)->get().e34 - 5.0f;
-				camera().center.x = rootg()->get<SnTransform>(1)->get().e14;
-				camera().center.y = b[1].dy() + b[4].dy();
-				camera().center.z = rootg()->get<SnTransform>(1)->get().e34;
-				camera().up = cross(camera().center - camera().eye, GsVec::i);
-				render();
-				ws_check();
-				message().setf("localtime = % f", lt);
-			} while (lt < 10.0f);
-		}
-		else {
-			//make fixed camera in the air
-			camera().eye.x = 0.0;
-			camera().eye.y = 4.0;
-			camera().eye.z = -3.5;
-			camera().center.x = 0;
-			camera().center.y = 0.5;
-			camera().center.z = 0;
-			camera().up = cross(camera().center - camera().eye, GsVec::i);
-			render();
-			ws_check();
-		}
-		fixedCamera = !fixedCamera;
+		run_animation();
+		cam = true;
 		return 1;
 	}
 	default: gsout << "Key pressed: " << e.key << gsnl;
